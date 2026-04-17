@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>货权转移明细</title>
+    <style>
+        /* 全局样式 - 贴合简道云简约、轻量的UI风格 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+        }
+        body {
+            background: #f7f8fa; /* 简道云经典浅灰背景 */
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px; /* 简道云圆角风格 */
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05); /* 轻量阴影 */
+            overflow: hidden;
+        }
+        /* 头部样式 - 简道云标题栏风格 */
+        .header {
+            background: #2f54eb; /* 简道云主色调 */
+            color: #fff;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        .title {
+            font-size: 20px;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+        /* 内容区域样式 */
+        .content {
+            padding: 24px;
+        }
+        /* 时间轴样式 - 优化后更贴合简道云UI */
+        .timeline {
+            position: relative;
+            padding-left: 48px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e8e8e8; /* 简道云浅灰分割线 */
+        }
+        /* 核心：添加动画样式 */
+        .timeline-item {
+            position: relative;
+            margin-bottom: 24px;
+            padding: 16px 20px;
+            background: #fff;
+            border: 1px solid #e8e8e8; /* 简道云边框风格 */
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            /* 初始状态：隐藏+上移+透明 */
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
+            /* 每个item延迟执行动画，形成从上到下效果 */
+        }
+        /* 逐行动画延迟（14个节点，总时长约7秒） */
+        .timeline-item:nth-child(1) { animation-delay: 0.2s; }
+        .timeline-item:nth-child(2) { animation-delay: 0.7s; }
+        .timeline-item:nth-child(3) { animation-delay: 1.2s; }
+        .timeline-item:nth-child(4) { animation-delay: 1.7s; }
+        .timeline-item:nth-child(5) { animation-delay: 2.2s; }
+        .timeline-item:nth-child(6) { animation-delay: 2.7s; }
+        .timeline-item:nth-child(7) { animation-delay: 3.2s; }
+        .timeline-item:nth-child(8) { animation-delay: 3.7s; }
+        .timeline-item:nth-child(9) { animation-delay: 4.2s; }
+        .timeline-item:nth-child(10) { animation-delay: 4.7s; }
+        .timeline-item:nth-child(11) { animation-delay: 5.2s; }
+        .timeline-item:nth-child(12) { animation-delay: 5.7s; }
+        .timeline-item:nth-child(13) { animation-delay: 6.2s; }
+        .timeline-item:nth-child(14) { animation-delay: 6.7s; }
+
+        /* 动画关键帧：从下到上渐显 */
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .timeline-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04); /* hover轻量阴影 */
+            border-color: #d9d9d9;
+        }
+        .timeline-item::before {
+            content: attr(data-step);
+            position: absolute;
+            left: -48px;
+            top: 16px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #2f54eb; /* 主色调圆点 */
+            color: #fff;
+            font-size: 12px;
+            text-align: center;
+            line-height: 28px;
+            font-weight: 600;
+        }
+        /* 转移标题样式 */
+        .content-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2f54eb; /* 主色调标题 */
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        /* 详情信息样式 - 简道云表单风格 */
+        .content-desc {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .desc-item {
+            display: flex;
+            align-items: center;
+        }
+        .desc-item label {
+            font-weight: 600;
+            color: #333;
+            margin-right: 8px;
+            min-width: 70px;
+        }
+        /* 箭头样式 - 优化为简道云风格 */
+        .arrow {
+            position: absolute;
+            left: -30px;
+            top: 40px;
+            color: #2f54eb;
+            font-size: 14px;
+            transform: rotate(90deg);
+            /* 箭头随item一起动画 */
+            opacity: 0;
+            animation: fadeIn 0.6s ease forwards;
+        }
+        /* 箭头动画延迟与对应item一致 */
+        .timeline-item:nth-child(1) .arrow { animation-delay: 0.7s; }
+        .timeline-item:nth-child(2) .arrow { animation-delay: 1.2s; }
+        .timeline-item:nth-child(3) .arrow { animation-delay: 1.7s; }
+        .timeline-item:nth-child(4) .arrow { animation-delay: 2.2s; }
+        .timeline-item:nth-child(5) .arrow { animation-delay: 2.7s; }
+        .timeline-item:nth-child(6) .arrow { animation-delay: 3.2s; }
+        .timeline-item:nth-child(7) .arrow { animation-delay: 3.7s; }
+        .timeline-item:nth-child(8) .arrow { animation-delay: 4.2s; }
+        .timeline-item:nth-child(9) .arrow { animation-delay: 4.7s; }
+        .timeline-item:nth-child(10) .arrow { animation-delay: 5.2s; }
+        .timeline-item:nth-child(11) .arrow { animation-delay: 5.7s; }
+        .timeline-item:nth-child(12) .arrow { animation-delay: 6.2s; }
+        .timeline-item:nth-child(13) .arrow { animation-delay: 6.7s; }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .timeline-item:last-child .arrow {
+            display: none;
+        }
+        /* 响应式适配 - 简道云移动端兼容 */
+        @media (max-width: 768px) {
+            .content {
+                padding: 16px;
+            }
+            .timeline {
+                padding-left: 40px;
+            }
+            .timeline-item::before {
+                width: 24px;
+                height: 24px;
+                left: -40px;
+                line-height: 24px;
+            }
+            .content-desc {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 简道云风格头部 -->
+        <div class="header">
+            <div class="title">货权转移明细</div>
+        </div>
+        
+        <!-- 内容区域 - 直接显示所有明细 -->
+        <div class="content">
+            <div class="timeline">
+                <!-- 节点1：初始货权人（8:30） -->
+                <div class="timeline-item" data-step="1">
+                    <div class="content-title">第1次转移 - 初始货权持有</div>
+                    <div class="content-desc">
+                        <div class="desc-item"><label>日期：</label>2026-04-16 08:30</div>
+                        <div class="desc-item"><label>货物名称：</label>PVC信发</div>
+                        <div class="desc-item"><label>货权人：</label>上海易塑贸易有限公司</div>
+                        <div class="desc-item"><label>重量：</label>500吨</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                </div>
+
+                <!-- 节点2（9:00） -->
+                <div class="timeline-item" data-step="2">
+                    <div class="content-title">第2次转移</div>
+                    <div class="content-desc">
+                        <div class="desc-item"><label>日期：</label>2026-04-16 09:00</div>
+                        <div class="desc-item"><label>货物名称：</label>PVC信发</div>
+                        <div class="desc-item"><label>货权人：</label>星空矩阵供应链有限公司</div>
+                        <div class="desc-item"><label>重量：</label>500吨</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                </div>
+
+                <!-- 节点3（9:30） -->
+                <div class="timeline-item" data-step="3">
+                    <div class="content-title">第3次转移</div>
+                    <div class="content-desc">
+                        <div class="desc-item"><label>日期：</label>2026-04-16 09:30</div>
+                        <div class="desc-item"><label>货物名称：</label>PVC信发</div>
+                        <div class="desc-item"><label>货权人：</label>意源贸易（上海）有限公司</div>
+                        <div class="desc-item"><label>重量：</label>500吨</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                </div>
+
+                <!-- 节点4（10:00） -->
+                <div class="timeline-item" data-step="4">
+                    <div class="content-title">第4次转移</div>
+                    <div class="content-desc">
+                        <div class="desc-item"><label>日期：</label>2026-04-16 10:00</div>
+                        <div class="desc-item"><label>货物名称：</label>PVC信发</div>
+                        <div class="desc-item"><label>货权人：</label>名城产业发展有限公司</div>
+                        <div class="desc-item"><label>重量：</label>500吨</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                </div>
+
+                <!-- 节点5（10:40） -->
+                <div class="timeline-item" data-step="5">
+                    <div class="content-title">第5次转移</div>
+                    <div class="content-desc">
+                        <div class="desc-item"><label>日期：</label>2026-04-16 10:40</div>
+                        <div class="desc-item"><label>货物名称：</label>PVC信发</div>
+                        <div class="desc-item"><label>货权人：</label>产投矿业集团有限公司</div>
+                        <div class="desc-item"><label>重量：</label>500吨</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                </div>
+
+                <!-- 节点6（11:20） -->
+                <div class="timeline-item" data-step="6">
+                    <div class="content-title">第6次转移</div>
+                    <div class="content-desc">
+                        <div class="desc-item"><label>日期：</label>2026-04-16 11:20</div>
+                        <div class="desc-item"><label>货物名称：</label>PVC信发</div>
+                        <div class="desc-item"><label>货权人：</label>慧农金惠水务有限公司</div>
+                        <div class="desc-item"><label>重量：</label>500吨</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                </div>
+
+                <!-- 节点7（12:00） -->
+                <div class="timeline-item" data-step="7">
+                    <div class="content-title">第7次转移</div>
+                    <div class="content-desc">
+                        <div class="desc-item"><label>日期：</label>2026-04-16 12:00</div>
+                        <div class="desc-item"><label>货物名称：</label>PVC信发</div>
+                        <div class="desc-item"><label>货权人：</label>振新投资控股有限公司</div>
+                        <div class="desc-item"><label>重量：</label>500吨</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                </div>
+
+                <!-- 节点8（13:00） -->
+                <div class="timeline-item" data-step="8">
+                    <div class="content-title">第8次转移</div>
+                    <div class="content-desc">
+                        <div class="desc-item"><label>日期：</label>2026-04-16 13:00</div>
+                        <div class="desc-item"><label>货物名称：</label>PVC信发</div>
+                        <div class="desc-item"><label>货权人：</label>润泽商贸有限公司</div>
+                        <div class="desc-item"><label>重量：</label>500吨</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                </div>
+
+                <!-- 节点9（13:40） -->
+                <div class="timeline-item" data-step="9">
+                    <div class="content-title">第9次转移</div>
+                    <div class="content-desc">
+                        <div class="desc-item"><label>日期：</label>2026-04-16 13:40</div>
+                        <div class="desc-item"><label>货物名称：</label>PVC信发</div>
+                        <div class="desc-item"><label>货权人：</label>经投建设工程有限公司</div>
+                        <div class="desc-item"><label>重量：</label>500吨</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                </div>
+
+                <!-- 节点10（14:20） -->
+                <div class="timeline-item" data-step="10">
+                    <div class="content-title">第10次转移</div>
+                    <div class="content-desc">
+                        <div class="desc-item"><label>日期：</label>2026-04-16 14:20</div>
+                        <div class="desc-item"><label>货物名称：</label>PVC信发</div>
+                        <div class="desc-item"><label>货权人：</label>北通工贸有限公司</div>
+                        <div class="desc-item"><label>重量：</label>500吨</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                </div>
+
+                <!-- 节点11（15:00） -->
+                <div class="timeline-item" data-step="11">
+                    <div class="content-title">第11次转移</div>
+                    <div class="content-desc">
+                        <div class="desc-item"><label>日期：</label>2026-04-16 15:00</div>
+                        <div class="desc-item"><label>货物名称：</label>PVC信发</div>
+                        <div class="desc-item"><label>货权人：</label>兴元实业集团有限公司</div>
+                        <div class="desc-item"><label>重量：</label>500吨</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                </div>
+
+                <!-- 节点12（15:40） -->
+                <div class="timeline-item" data-step="12">
+                    <div class="content-title">第12次转移</div>
+                    <div class="content-desc">
+                        <div class="desc-item"><label>日期：</label>2026-04-16 15:40</div>
+                        <div class="desc-item"><label>货物名称：</label>PVC信发</div>
+                        <div class="desc-item"><label>货权人：</label>天原包装材料有限公司</div>
+                        <div class="desc-item"><label>重量：</label>500吨</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                </div>
+
+                <!-- 节点13（16:20） -->
+                <div class="timeline-item" data-step="13">
+                    <div class="content-title">第13次转移</div>
+                    <div class="content-desc">
+                        <div class="desc-item"><label>日期：</label>2026-04-16 16:20</div>
+                        <div class="desc-item"><label>货物名称：</label>PVC信发</div>
+                        <div class="desc-item"><label>货权人：</label>汇发产贸有限公司</div>
+                        <div class="desc-item"><label>重量：</label>500吨</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                </div>
+
+                <!-- 节点14（17:00） -->
+                <div class="timeline-item" data-step="14">
+                    <div class="content-title">第14次转移</div>
+                    <div class="content-desc">
+                        <div class="desc-item"><label>日期：</label>2026-04-16 17:00</div>
+                        <div class="desc-item"><label>货物名称：</label>PVC信发</div>
+                        <div class="desc-item"><label>货权人：</label>上海易塑贸易有限公司</div>
+                        <div class="desc-item"><label>重量：</label>500吨</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
